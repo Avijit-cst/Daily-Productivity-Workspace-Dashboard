@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Productivity & Workspace Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0b0f19',
+                        cardBg: '#151c2c',
+                        cardHover: '#1c263b',
+                        accentIndigo: '#6366f1',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for clean UI */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0b0f19;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #232d42;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #374151;
+        }
+    </style>
+</head>
+<body class="bg-darkBg text-slate-100 min-h-screen font-sans p-3 sm:p-6 lg:p-8 antialiased selection:bg-indigo-500 selection:text-white">
+
+    <!-- Main Container -->
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <header class="flex flex-col md:flex-row justify-between items-center bg-cardBg p-6 rounded-2xl border border-slate-800/80 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-40 h-40 bg-indigo-600/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="z-10 text-center md:text-left">
+                <h1 id="greeting" class="text-2xl sm:text-3xl font-extrabold text-indigo-400 flex items-center justify-center md:justify-start gap-2">
+                    <span>শুভ দিন!</span>
+                </h1>
+                <p id="current-date" class="text-slate-400 mt-1 text-sm sm:text-base font-medium"></p>
+            </div>
+            <div class="mt-4 md:mt-0 z-10 text-center md:text-right">
+                <div id="clock" class="text-3xl sm:text-4xl font-black tracking-wider text-slate-100 font-mono">00:00:00</div>
+                <div class="text-xs text-indigo-400/80 uppercase tracking-widest mt-1 font-semibold">Live Time Engine</div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- LIVE WEATHER WIDGET -->
+            <div class="lg:col-span-2 bg-cardBg p-6 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col justify-between relative">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="cloud-sun" class="w-6 h-6 text-indigo-400"></i>
+                        <h2 class="text-xl font-bold text-indigo-300">সরাসরি আবহাওয়া (Live Weather)</h2>
+                    </div>
+                    <button id="open-weather-modal" class="p-2 text-slate-400 hover:text-indigo-400 hover:bg-slate-800/60 rounded-xl transition-all" title="আবহাওয়া সেটিংস">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </button>
+                </div>
+
+                <!-- Weather Display Content -->
+                <div id="weather-container" class="grid grid-cols-1 sm:grid-cols-2 gap-4 items-center min-h-[120px]">
+                    <div class="flex items-center space-x-4">
+                        <div id="weather-icon-wrapper" class="w-20 h-20 bg-slate-800/50 rounded-2xl flex items-center justify-center border border-slate-700/50 shadow-inner">
+                            <i data-lucide="loader" class="w-8 h-8 text-indigo-400 animate-spin"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-baseline space-x-1">
+                                <span id="weather-temp" class="text-4xl font-black text-slate-100">--</span>
+                                <span class="text-xl font-bold text-indigo-400">°C</span>
+                            </div>
+                            <p id="weather-desc" class="text-slate-400 capitalize text-sm font-medium mt-0.5">লাইভ ডেটা আনা হচ্ছে...</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/40 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-400 flex items-center gap-1.5"><i data-lucide="map-pin" class="w-4 h-4 text-indigo-400"></i> স্থান:</span>
+                            <span id="weather-city" class="font-bold text-slate-200">Rangpur, BD</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-400 flex items-center gap-1.5"><i data-lucide="droplets" class="w-4 h-4 text-indigo-400"></i> আর্দ্রতা (Humidity):</span>
+                            <span id="weather-humidity" class="font-bold text-slate-200">--%</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-slate-400 flex items-center gap-1.5"><i data-lucide="wind" class="w-4 h-4 text-indigo-400"></i> বাতাস (Wind):</span>
+                            <span id="weather-wind" class="font-bold text-slate-200">-- m/s</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-800/60 flex justify-between items-center text-xs text-slate-500">
+                    <span id="weather-update-status">সরাসরি আবহাওয়া এপিআই সংযুক্ত</span>
+                    <button id="refresh-weather-btn" class="hover:text-indigo-400 flex items-center gap-1 transition-colors">
+                        <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> রিফ্রেশ
+                    </button>
+                </div>
+            </div>
+
+            <!-- POMODORO TIMER -->
+            <div class="bg-cardBg p-6 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col justify-between items-center relative">
+                <div class="flex items-center justify-between w-full mb-2">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="timer" class="w-6 h-6 text-indigo-400"></i>
+                        <h2 class="text-xl font-bold text-indigo-300">Pomodoro Timer</h2>
+                    </div>
+                    <span id="pomo-status-tag" class="text-xs bg-indigo-500/10 text-indigo-400 px-2.5 py-1 rounded-lg border border-indigo-500/20 font-medium">Focus</span>
+                </div>
+
+                <div id="pomo-display" class="text-5xl font-black my-4 tracking-widest text-slate-100 font-mono drop-shadow-md">25:00</div>
+                
+                <div class="flex space-x-2.5 w-full justify-center">
+                    <button id="pomo-start" class="flex-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl transition-all shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-1">
+                        <i data-lucide="play" class="w-4 h-4 fill-current"></i> Start
+                    </button>
+                    <button id="pomo-pause" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold py-2.5 rounded-xl transition-all border border-slate-700 flex items-center justify-center gap-1">
+                        <i data-lucide="pause" class="w-4 h-4"></i> Pause
+                    </button>
+                    <button id="pomo-reset" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 font-semibold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center">
+                        <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="bg-cardBg p-6 rounded-2xl border border-slate-800/80 shadow-xl">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 mb-4">
+                <div class="flex items-center space-x-2">
+                    <i data-lucide="zap" class="w-6 h-6 text-indigo-400"></i>
+                    <h2 class="text-xl font-bold text-indigo-300">Daily Habit Tracker</h2>
+                </div>
+                <span id="habit-progress-text" class="self-start sm:self-auto text-xs bg-indigo-500/15 text-indigo-300 border border-indigo-500/30 px-3 py-1.5 rounded-full font-bold">0% Completed</span>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-800 h-3 rounded-full mb-6 overflow-hidden border border-slate-700/60 p-0.5">
+                <div id="habit-progress-bar" class="bg-gradient-to-r from-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500 shadow-sm" style="width: 0%"></div>
+            </div>
+
+            <!-- Add Habit Input -->
+            <div class="flex mb-5">
+                <input type="text" id="habit-input" placeholder="নতুন অভ্যাস টাইপ করুন (যেমন: ৩ লিটার পানি পান, ৩০ মিনিট কোডিং)..." class="flex-grow bg-slate-800/80 border border-slate-700/80 rounded-l-xl px-4 py-2.5 focus:outline-none focus:border-indigo-500 text-sm text-slate-100 placeholder-slate-500">
+                <button id="add-habit-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 rounded-r-xl transition-all font-semibold text-sm flex items-center gap-1 shadow-md">
+                    <i data-lucide="plus" class="w-4 h-4"></i> Add Habit
+                </button>
+            </div>
+
+            <!-- Habit List Cards Grid -->
+            <div id="habit-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 max-h-56 overflow-y-auto pr-1"></div>
+        </div>
+
+        <div class="bg-cardBg p-6 rounded-2xl border border-slate-800/80 shadow-xl">
+            <div class="flex items-center space-x-2 mb-4">
+                <i data-lucide="compass" class="w-6 h-6 text-indigo-400"></i>
+                <h2 class="text-xl font-bold text-indigo-300">Quick Access Hub</h2>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+                <a href="https://google.com" target="_blank" class="flex items-center space-x-3 p-3 bg-slate-800/50 hover:bg-cardHover rounded-xl transition border border-slate-800 hover:border-slate-700 group">
+                    <i data-lucide="search" class="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="font-semibold text-sm text-slate-300 group-hover:text-white">Google</span>
+                </a>
+                <a href="https://youtube.com" target="_blank" class="flex items-center space-x-3 p-3 bg-slate-800/50 hover:bg-cardHover rounded-xl transition border border-slate-800 hover:border-slate-700 group">
+                    <i data-lucide="youtube" class="w-5 h-5 text-red-500 group-hover:scale-110 transition-transform"></i>
+                    <span class="font-semibold text-sm text-slate-300 group-hover:text-white">YouTube</span>
+                </a>
+                <a href="https://github.com" target="_blank" class="flex items-center space-x-3 p-3 bg-slate-800/50 hover:bg-cardHover rounded-xl transition border border-slate-800 hover:border-slate-700 group">
+                    <i data-lucide="github" class="w-5 h-5 text-slate-100 group-hover:scale-110 transition-transform"></i>
+                    <span class="font-semibold text-sm text-slate-300 group-hover:text-white">GitHub</span>
+                </a>
+                <a href="https://gmail.com" target="_blank" class="flex items-center space-x-3 p-3 bg-slate-800/50 hover:bg-cardHover rounded-xl transition border border-slate-800 hover:border-slate-700 group">
+                    <i data-lucide="mail" class="w-5 h-5 text-amber-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="font-semibold text-sm text-slate-300 group-hover:text-white">Gmail</span>
+                </a>
+                <a href="https://chat.openai.com" target="_blank" class="flex items-center space-x-3 p-3 bg-slate-800/50 hover:bg-cardHover rounded-xl transition border border-slate-800 hover:border-slate-700 group">
+                    <i data-lucide="bot" class="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="font-semibold text-sm text-slate-300 group-hover:text-white">ChatGPT</span>
+                </a>
+                <a href="https://linkedin.com" target="_blank" class="flex items-center space-x-3 p-3 bg-slate-800/50 hover:bg-cardHover rounded-xl transition border border-slate-800 hover:border-slate-700 group">
+                    <i data-lucide="linkedin" class="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="font-semibold text-sm text-slate-300 group-hover:text-white">LinkedIn</span>
+                </a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- DAILY TO-DO LIST -->
+            <div class="bg-cardBg p-6 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col justify-between">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i data-lucide="check-square" class="w-6 h-6 text-indigo-400"></i>
+                        <h2 class="text-xl font-bold text-indigo-300">Today's Tasks</h2>
+                    </div>
+                    <div class="flex mb-4">
+                        <input type="text" id="task-input" placeholder="আজকের গুরুত্বপূর্ণ কাজ যোগ করুন..." class="flex-grow bg-slate-800/80 border border-slate-700/80 rounded-l-xl px-4 py-2.5 focus:outline-none focus:border-indigo-500 text-sm text-slate-100 placeholder-slate-500">
+                        <button id="add-task-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 rounded-r-xl transition-all font-semibold text-sm shadow-md">Add Task</button>
+                    </div>
+                    <ul id="task-list" class="space-y-2.5 max-h-64 overflow-y-auto pr-1"></ul>
+                </div>
+            </div>
+
+            <!-- SCRATCHPAD / NOTES -->
+            <div class="bg-cardBg p-6 rounded-2xl border border-slate-800/80 shadow-xl flex flex-col">
+                <div class="flex justify-between items-center mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="edit-3" class="w-6 h-6 text-indigo-400"></i>
+                        <h2 class="text-xl font-bold text-indigo-300">Quick Scratchpad</h2>
+                    </div>
+                    <span id="note-status" class="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-medium">Auto-saved</span>
+                </div>
+                <textarea id="scratchpad" placeholder="দ্রুত কোনো নোট, ফোন নম্বর বা চিন্তা এখানে লিখে রাখুন..." class="w-full flex-grow bg-slate-800/80 border border-slate-700/80 rounded-xl p-4 focus:outline-none focus:border-indigo-500 text-sm text-slate-200 placeholder-slate-500 resize-none min-h-[160px] leading-relaxed"></textarea>
+            </div>
+
+        </div>
+
+    </div>
+
+    <div id="weather-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-cardBg border border-slate-700 rounded-2xl max-w-md w-full p-6 shadow-2xl relative space-y-4">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="text-lg font-bold text-indigo-300 flex items-center gap-2">
+                    <i data-lucide="sliders" class="w-5 h-5"></i> আবহাওয়া কনফিগারেশন
+                </h3>
+                <button id="close-weather-modal" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <p class="text-xs text-slate-400 leading-relaxed">
+                আপনার নিজস্ব OpenWeatherMap API Key ব্যবহার করতে পারেন অথবা যেকোনো অন্য শহরের লাইভ আপডেট দেখতে শহরের নাম পরিবর্তন করতে পারেন।
+            </p>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">শহরের নাম (City Name):</label>
+                    <input type="text" id="api-city-input" placeholder="e.g. Rangpur, Dhaka, Chittagong" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-slate-300 mb-1">OpenWeather API Key:</label>
+                    <input type="password" id="api-key-input" placeholder="আপনার API key ব্যবহার করতে পারেন" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button id="save-weather-settings" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-xl transition-all text-sm">
+                    সেভ ও রিফ্রেশ করুন
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // --- 1. CLOCK & GREETING ENGINE ---
+        function updateClock() {
+            const now = new Date();
+            const hours = now.getHours();
+            
+            let greetingText = "শুভ দিন!";
+            if (hours >= 5 && hours < 12) greetingText = "শুভ সকাল! ☀️";
+            else if (hours >= 12 && hours < 17) greetingText = "শুভ দুপুর! 🌤️";
+            else if (hours >= 17 && hours < 20) greetingText = "শুভ বিকাল! 🌆";
+            else greetingText = "শুভ রাত! 🌙";
+
+            document.getElementById('greeting').innerHTML = `<span>${greetingText}</span>`;
+            document.getElementById('clock').innerText = now.toLocaleTimeString();
+            
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').innerText = now.toLocaleDateString('bn-BD', options);
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 2. HYBRID LIVE WEATHER ENGINE (Open-Meteo Keyless + OpenWeather Custom) ---
+        let weatherConfig = JSON.parse(localStorage.getItem('weather_config')) || {
+            apiKey: '',
+            city: 'Rangpur'
+        };
+
+        const weatherModal = document.getElementById('weather-modal');
+        const openWeatherModalBtn = document.getElementById('open-weather-modal');
+        const closeWeatherModalBtn = document.getElementById('close-weather-modal');
+        const saveWeatherSettingsBtn = document.getElementById('save-weather-settings');
+        const apiKeyInput = document.getElementById('api-key-input');
+        const apiCityInput = document.getElementById('api-city-input');
+
+        openWeatherModalBtn.addEventListener('click', () => {
+            apiKeyInput.value = weatherConfig.apiKey || '';
+            apiCityInput.value = weatherConfig.city || 'Rangpur';
+            weatherModal.classList.remove('hidden');
+        });
+
+        closeWeatherModalBtn.addEventListener('click', () => {
+            weatherModal.classList.add('hidden');
+        });
+
+        saveWeatherSettingsBtn.addEventListener('click', () => {
+            weatherConfig.apiKey = apiKeyInput.value.trim();
+            weatherConfig.city = apiCityInput.value.trim() || 'Rangpur';
+            localStorage.setItem('weather_config', JSON.stringify(weatherConfig));
+            weatherModal.classList.add('hidden');
+            fetchWeatherData();
+        });
+
+        document.getElementById('refresh-weather-btn').addEventListener('click', fetchWeatherData);
+
+        function getWeatherCodeInfo(code) {
+            if (code === 0) return { desc: 'পরিষ্কার আকাশ', icon: 'sun' };
+            if ([1, 2, 3].includes(code)) return { desc: 'আংশিক মেঘলা', icon: 'cloud-sun' };
+            if ([45, 48].includes(code)) return { desc: 'কুয়াশাচ্ছন্ন', icon: 'cloud-fog' };
+            if ([51, 53, 55, 56, 57].includes(code)) return { desc: 'হালকা বৃষ্টি', icon: 'cloud-drizzle' };
+            if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return { desc: 'বৃষ্টিপাত', icon: 'cloud-rain' };
+            if ([71, 73, 75, 77, 85, 86].includes(code)) return { desc: 'তুষারপাত', icon: 'snowflake' };
+            if ([95, 96, 99].includes(code)) return { desc: 'বজ্রবৃষ্টি', icon: 'cloud-lightning' };
+            return { desc: 'আবহাওয়ার তথ্য', icon: 'cloud' };
+        }
+
+        async function fetchWeatherData() {
+            const tempEl = document.getElementById('weather-temp');
+            const descEl = document.getElementById('weather-desc');
+            const cityEl = document.getElementById('weather-city');
+            const humidityEl = document.getElementById('weather-humidity');
+            const windEl = document.getElementById('weather-wind');
+            const iconWrapper = document.getElementById('weather-icon-wrapper');
+            const statusEl = document.getElementById('weather-update-status');
+
+            const city = weatherConfig.city || 'Rangpur';
+            const apiKey = weatherConfig.apiKey;
+
+            statusEl.innerText = 'সরাসরি আবহাওয়া আনা হচ্ছে...';
+            iconWrapper.innerHTML = `<i data-lucide="loader" class="w-8 h-8 text-indigo-400 animate-spin"></i>`;
+            lucide.createIcons();
+
+            // 1. Try Custom OpenWeather API key if provided by user
+            if (apiKey) {
+                try {
+                    const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&units=metric&lang=bn&appid=${apiKey}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        tempEl.innerText = Math.round(data.main.temp);
+                        descEl.innerText = data.weather[0].description;
+                        cityEl.innerText = `${data.name}, ${data.sys.country}`;
+                        humidityEl.innerText = `${data.main.humidity}%`;
+                        windEl.innerText = `${data.wind.speed} m/s`;
+                        const iconCode = data.weather[0].icon;
+                        iconWrapper.innerHTML = `<img src="https://openweathermap.org/img/wn/${iconCode}@2x.png" alt="weather icon" class="w-16 h-16 drop-shadow">`;
+                        const nowTime = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+                        statusEl.innerText = `OpenWeather Live (${nowTime})`;
+                        return;
+                    }
+                } catch (e) {
+                    console.warn("OpenWeatherMap API error, switching to Open-Meteo fallback:", e);
+                }
+            }
+
+            // 2. Reliable Keyless Fallback Engine (Open-Meteo)
+            try {
+                // Geocode city to coordinates
+                const geoRes = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`);
+                if (!geoRes.ok) throw new Error('Geocoding request failed');
+                const geoData = await geoRes.json();
+                
+                if (!geoData.results || geoData.results.length === 0) {
+                    throw new Error('City not found');
+                }
+
+                const location = geoData.results[0];
+                const lat = location.latitude;
+                const lon = location.longitude;
+                const cityName = `${location.name}, ${location.country_code ? location.country_code.toUpperCase() : ''}`;
+
+                // Fetch weather forecast for coordinates
+                const weatherRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code`);
+                if (!weatherRes.ok) throw new Error('Weather data fetch failed');
+                const weatherData = await weatherRes.json();
+                const current = weatherData.current;
+
+                tempEl.innerText = Math.round(current.temperature_2m);
+                cityEl.innerText = cityName;
+                humidityEl.innerText = `${Math.round(current.relative_humidity_2m)}%`;
+                windEl.innerText = `${(current.wind_speed_10m / 3.6).toFixed(1)} m/s`;
+
+                const weatherInfo = getWeatherCodeInfo(current.weather_code);
+                descEl.innerText = weatherInfo.desc;
+                iconWrapper.innerHTML = `<i data-lucide="${weatherInfo.icon}" class="w-10 h-10 text-indigo-400"></i>`;
+
+                const nowTime = new Date().toLocaleTimeString('bn-BD', { hour: '2-digit', minute: '2-digit' });
+                statusEl.innerText = `Open-Meteo Live (${nowTime})`;
+                lucide.createIcons();
+            } catch (err) {
+                console.error('Weather fetch error:', err);
+                descEl.innerText = 'আবহাওয়া লোড ব্যর্থ হয়েছে';
+                statusEl.innerText = 'শহরের নাম এবং ইন্টারনেট সংযোগ পরীক্ষা করুন।';
+                iconWrapper.innerHTML = `<i data-lucide="cloud-off" class="w-8 h-8 text-red-400"></i>`;
+                lucide.createIcons();
+            }
+        }
+
+        // Initial weather fetch
+        fetchWeatherData();
+
+        // --- 3. HABIT TRACKER LOGIC ---
+        const habitInput = document.getElementById('habit-input');
+        const addHabitBtn = document.getElementById('add-habit-btn');
+        const habitList = document.getElementById('habit-list');
+        const progressBar = document.getElementById('habit-progress-bar');
+        const progressText = document.getElementById('habit-progress-text');
+
+        let habits = JSON.parse(localStorage.getItem('daily_habits')) || [
+            { text: '💧 ৩ লিটার পানি পান', completed: false },
+            { text: '📚 ৩০ মিনিট বই পড়া', completed: false },
+            { text: '🏃 ১৫ মিনিট ব্যায়াম', completed: false }
+        ];
+
+        function renderHabits() {
+            habitList.innerHTML = '';
+            let completedCount = 0;
+
+            habits.forEach((habit, index) => {
+                if (habit.completed) completedCount++;
+
+                const habitCard = document.createElement('div');
+                habitCard.className = `flex justify-between items-center p-3 rounded-xl border transition-all ${
+                    habit.completed 
+                    ? 'bg-indigo-950/30 border-indigo-500/40 text-indigo-200' 
+                    : 'bg-slate-800/40 border-slate-700/60 text-slate-300 hover:bg-slate-800/70'
+                }`;
+
+                habitCard.innerHTML = `
+                    <div class="flex items-center space-x-3 cursor-pointer flex-grow select-none" onclick="toggleHabit(${index})">
+                        <div class="w-5 h-5 rounded-md border flex items-center justify-center transition-all ${
+                            habit.completed ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-600 bg-slate-800'
+                        }">
+                            ${habit.completed ? '<i data-lucide="check" class="w-3.5 h-3.5 stroke-[3]"></i>' : ''}
+                        </div>
+                        <span class="text-sm font-medium ${habit.completed ? 'line-through text-indigo-300/60' : ''}">${habit.text}</span>
+                    </div>
+                    <button onclick="deleteHabit(${index})" class="text-slate-500 hover:text-red-400 p-1 transition-colors">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                `;
+                habitList.appendChild(habitCard);
+            });
+
+            const percent = habits.length > 0 ? Math.round((completedCount / habits.length) * 100) : 0;
+            progressBar.style.width = `${percent}%`;
+            progressText.innerText = `${percent}% Completed`;
+
+            localStorage.setItem('daily_habits', JSON.stringify(habits));
+            lucide.createIcons();
+        }
+
+        addHabitBtn.addEventListener('click', () => {
+            if (habitInput.value.trim() !== '') {
+                habits.push({ text: habitInput.value.trim(), completed: false });
+                habitInput.value = '';
+                renderHabits();
+            }
+        });
+
+        habitInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addHabitBtn.click();
+        });
+
+        window.toggleHabit = function(index) {
+            habits[index].completed = !habits[index].completed;
+            renderHabits();
+        };
+
+        window.deleteHabit = function(index) {
+            habits.splice(index, 1);
+            renderHabits();
+        };
+
+        renderHabits();
+
+        // --- 4. POMODORO TIMER ENGINE ---
+        let timer;
+        let timeLeft = 25 * 60;
+        let isRunning = false;
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('pomo-display').innerText = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        document.getElementById('pomo-start').addEventListener('click', () => {
+            if (!isRunning) {
+                isRunning = true;
+                document.getElementById('pomo-status-tag').innerText = 'Running...';
+                document.getElementById('pomo-status-tag').className = 'text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-medium';
+                
+                timer = setInterval(() => {
+                    if (timeLeft > 0) {
+                        timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(timer);
+                        isRunning = false;
+                        document.getElementById('pomo-status-tag').innerText = 'Finished';
+                        document.getElementById('pomo-display').innerText = '00:00';
+                    }
+                }, 1000);
+            }
+        });
+
+        document.getElementById('pomo-pause').addEventListener('click', () => {
+            clearInterval(timer);
+            isRunning = false;
+            document.getElementById('pomo-status-tag').innerText = 'Paused';
+            document.getElementById('pomo-status-tag').className = 'text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg font-medium';
+        });
+
+        document.getElementById('pomo-reset').addEventListener('click', () => {
+            clearInterval(timer);
+            isRunning = false;
+            timeLeft = 25 * 60;
+            updateTimerDisplay();
+            document.getElementById('pomo-status-tag').innerText = 'Focus';
+            document.getElementById('pomo-status-tag').className = 'text-xs bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-1 rounded-lg font-medium';
+        });
+
+        // --- 5. TO-DO LIST MODULE ---
+        const taskInput = document.getElementById('task-input');
+        const addTaskBtn = document.getElementById('add-task-btn');
+        const taskList = document.getElementById('task-list');
+
+        let tasks = JSON.parse(localStorage.getItem('daily_tasks')) || [
+            { text: 'ড্যাশবোর্ড সম্পূর্ণ চেক করা', completed: true },
+            { text: 'আজকের মূল টাস্ক সম্পন্ন করা', completed: false }
+        ];
+
+        function renderTasks() {
+            taskList.innerHTML = '';
+            tasks.forEach((task, index) => {
+                const li = document.createElement('li');
+                li.className = 'flex justify-between items-center bg-slate-800/40 p-3 rounded-xl border border-slate-700/60 hover:bg-slate-800/70 transition-all';
+                li.innerHTML = `
+                    <div class="flex items-center space-x-3 cursor-pointer flex-grow select-none" onclick="toggleTask(${index})">
+                        <div class="w-4 h-4 rounded border flex items-center justify-center ${
+                            task.completed ? 'bg-indigo-600 border-indigo-500 text-white' : 'border-slate-600 bg-slate-800'
+                        }">
+                            ${task.completed ? '<i data-lucide="check" class="w-3 h-3 stroke-[3]"></i>' : ''}
+                        </div>
+                        <span class="text-sm font-medium ${task.completed ? 'line-through text-slate-500' : 'text-slate-200'}">${task.text}</span>
+                    </div>
+                    <button onclick="deleteTask(${index})" class="text-slate-500 hover:text-red-400 p-1 transition-colors">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                `;
+                taskList.appendChild(li);
+            });
+            localStorage.setItem('daily_tasks', JSON.stringify(tasks));
+            lucide.createIcons();
+        }
+
+        addTaskBtn.addEventListener('click', () => {
+            if (taskInput.value.trim() !== '') {
+                tasks.push({ text: taskInput.value.trim(), completed: false });
+                taskInput.value = '';
+                renderTasks();
+            }
+        });
+
+        taskInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') addTaskBtn.click();
+        });
+
+        window.toggleTask = function(index) {
+            tasks[index].completed = !tasks[index].completed;
+            renderTasks();
+        };
+
+        window.deleteTask = function(index) {
+            tasks.splice(index, 1);
+            renderTasks();
+        };
+
+        renderTasks();
+
+        // --- 6. SCRATCHPAD AUTO-SAVE ---
+        const scratchpad = document.getElementById('scratchpad');
+        const noteStatus = document.getElementById('note-status');
+
+        scratchpad.value = localStorage.getItem('quick_note') || '';
+
+        let autoSaveTimeout;
+        scratchpad.addEventListener('input', () => {
+            noteStatus.innerText = 'সেভ হচ্ছে...';
+            noteStatus.className = 'text-xs bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-1 rounded-lg font-medium';
+            
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = setTimeout(() => {
+                localStorage.setItem('quick_note', scratchpad.value);
+                noteStatus.innerText = 'Auto-saved';
+                noteStatus.className = 'text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-lg font-medium';
+            }, 600);
+        });
+    </script>
+    </body>
+</html>
