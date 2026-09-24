@@ -58,7 +58,7 @@ OpenWeatherMap API (Optional Custom Key)
 Data Persistence: Browser localStorage API
 
 🚀 Live Demo & How to Run
-
+https://avijit-cst.github.io/Daily-Productivity-Workspace-Dashboard/
 Method 1: Open Directly in Browser
 
 Clone this repository or download the source code:
